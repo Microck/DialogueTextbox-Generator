@@ -1,6 +1,6 @@
 A Python script to automatically generate retro RPG-style dialogue videos, complete with character portraits and a classic typing effect. Perfect for social media clips, game development showcases, or creative projects.
 
-https://github.com/user-attachments/assets/ac366105-1009-40f0-92d6-b666234a005b
+![pixel_perfect_video](https://github.com/user-attachments/assets/36d34cea-eeb7-4df0-a8c2-a77a26b37d8b)
 
 
 ## Features
@@ -8,7 +8,7 @@ https://github.com/user-attachments/assets/ac366105-1009-40f0-92d6-b666234a005b
 *   **Text from File:** Reads all dialogue directly from a simple `dialogue.txt` file.
 *   **Automatic Asset Detection:** Automatically finds and uses a font file (`.ttf`/`.otf`) and a portrait image (`.png`/`.jpg`) placed in the same folder.
 *   **Adaptive Resolution:** Dynamically calculates the video resolution to perfectly fit your text and portrait, minimizing wasted space.
-*   **Pixel-Perfect Rendering:** Creates crisp, pixel-perfect font rendering (no anti-aliasing) for an authentic retro feel, just like in games like Undertale.
+*   **Pixel-Perfect Rendering:** Creates crisp, pixel-perfect font rendering (no anti-aliasing) for an authentic retro feel, just like in games like Undertale or Deltarune.
 *   **Easy to Customize:** Key settings like font size, typing speed, and padding are all at the top of the script for easy tweaking.
 
 ## How to Use
