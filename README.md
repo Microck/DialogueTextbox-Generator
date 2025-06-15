@@ -1,5 +1,3 @@
-A Python script to automatically generate retro RPG-style dialogue videos, complete with character portraits and a classic typing effect. Perfect for social media clips, game development showcases, or creative projects.
-
 ![pixel_perfect_video](https://github.com/user-attachments/assets/36d34cea-eeb7-4df0-a8c2-a77a26b37d8b)
 
 
