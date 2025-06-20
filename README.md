@@ -74,13 +74,12 @@ The script will print its progress and save the final video (e.g., `dialogue_fro
 
 ## Update
 
-**20/06/2024**
+**20/06/2024 `gradient.py`**
 
 - **Fixed-Size Output:** You can now set a fixed output size (e.g., `512x512` or `1024x1024`) for your video, making it easy to create perfectly square or custom-sized dialogue boxes for any project.
 - **Vertical Gradient Background:** The background now supports a vertical gradient (e.g., white at the top, gray at the bottom) for a modern, stylish look—just like in Spline or visual novels.
 - **True Left-Aligned Text:** Text is always left-aligned and never stretched or centered, ensuring a clean, readable layout.
 - **Automatic Text Wrapping:** The script automatically wraps your text to fit inside the box, respecting your chosen padding and font size.
-- **WebM Video Output:** In addition to PNG sequences, the script now exports directly to high-quality WebM video, perfect for web and 3D tools like Spline.
 - **Easy Customization:** All key layout options (`BOX_SIZE`, `PADDING`, `FONT_SIZE`) are now at the top of the script for quick adjustments.
 
 **How to use the new features:**  
