@@ -53,7 +53,7 @@ VIDEO_DURATION_SEC_AFTER_TEXT = 2
 ```
 
 **Frame-Based Timing Rules:**
-You can also adjust the core timing rules directly in the script. These values are measured in frames (the video runs at 30 frames per second).
+You can also adjust the core timing rules directly in the script. These values are measured in frames (the video runs at 30 frames per second). Only working in 'dialogue.py'
 
 ```python
 # Timing rules (in frames)
