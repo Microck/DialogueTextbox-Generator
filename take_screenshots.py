@@ -17,10 +17,14 @@ from gui import App
 os.makedirs("screenshots", exist_ok=True)
 
 def capture_window(root, filename):
+    root.lift()
+    root.attributes('-topmost', True)
     root.update_idletasks()
     root.update()
-    time.sleep(0.3)
+    time.sleep(0.5)
+    root.focus_force()
     root.update()
+    time.sleep(0.3)
     
     x = root.winfo_rootx()
     y = root.winfo_rooty()
@@ -30,6 +34,8 @@ def capture_window(root, filename):
     img = ImageGrab.grab(bbox=(x, y, x + w, y + h))
     img.save(filename)
     print(f"Saved: {filename}")
+    
+    root.attributes('-topmost', False)
 
 def main():
     root = tk.Tk()
@@ -48,15 +54,9 @@ def main():
         app.switch_bg_type()
         capture_window(root, "screenshots/gui_image.png")
         
-        try:
-            app.notebook.select(1)
-            capture_window(root, "screenshots/gui_batch.png")
-        except:
-            pass
-        
         root.quit()
     
-    root.after(500, take_all)
+    root.after(1000, take_all)
     root.mainloop()
 
 if __name__ == "__main__":
