@@ -1,0 +1,6 @@
+pygame
+opencv-python
+numpy
+tqdm
+Pillow
+rich

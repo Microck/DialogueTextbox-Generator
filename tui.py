@@ -216,17 +216,21 @@ def build_command(config):
         if config["auto_open"]:
             cmd.append("--auto-open")
     
-    return cmd
+    return cmd, temp_file
 
 
-def run_command(cmd):
+def run_command(cmd, temp_file=None):
     console.print(f"\n  [{THEME['dim']}]{' '.join(cmd)}[/{THEME['dim']}]")
     console.print()
-    result = subprocess.run(cmd)
-    if result.returncode == 0:
-        console.print(f"\n  [{THEME['success']}]Done![/{THEME['success']}]")
-    else:
-        console.print(f"\n  [{THEME['accent2']}]Failed[/{THEME['accent2']}]")
+    try:
+        result = subprocess.run(cmd)
+        if result.returncode == 0:
+            console.print(f"\n  [{THEME['success']}]Done![/{THEME['success']}]")
+        else:
+            console.print(f"\n  [{THEME['accent2']}]Failed[/{THEME['accent2']}]")
+    finally:
+        if temp_file and os.path.exists(temp_file):
+            os.remove(temp_file)
 
 
 def batch_process():
@@ -255,8 +259,8 @@ def main():
             config = configure_video()
             if config:
                 if Confirm.ask(f"\n  [{THEME['accent']}]Generate?[/{THEME['accent']}]", default=True):
-                    cmd = build_command(config)
-                    run_command(cmd)
+                    cmd, temp_file = build_command(config)
+                    run_command(cmd, temp_file)
             Prompt.ask(f"\n  [{THEME['dim']}]Press Enter[/{THEME['dim']}]", default="")
         elif choice == "2":
             batch_process()

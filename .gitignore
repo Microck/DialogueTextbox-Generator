@@ -55,6 +55,7 @@ Desktop.ini
 *.bak
 *.log
 *.cache
+_temp_dialogue.txt
 
 # Python
 *.manifest

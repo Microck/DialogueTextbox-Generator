@@ -8,6 +8,7 @@ import subprocess
 import shutil
 from pathlib import Path
 
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 
 import pygame

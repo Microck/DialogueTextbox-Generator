@@ -319,6 +319,9 @@ class App:
             except Exception as e:
                 self.root.after(0, lambda: self.status_var.set("Error"))
                 self.root.after(0, lambda: messagebox.showerror("Error", str(e)))
+            finally:
+                if os.path.exists(temp_file):
+                    os.remove(temp_file)
         
         threading.Thread(target=run, daemon=True).start()
     
