@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 import tkinter as tk
-from tkinter import ttk
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
-from gui import DialogueGeneratorGUI, ModernStyle
+from gui import App
 
 try:
     from PIL import ImageGrab
@@ -19,7 +18,7 @@ def take_screenshots():
         return
     
     root = tk.Tk()
-    app = DialogueGeneratorGUI(root)
+    app = App(root)
     
     def capture():
         root.update_idletasks()
@@ -31,10 +30,11 @@ def take_screenshots():
         h = root.winfo_height()
         
         img = ImageGrab.grab(bbox=(x, y, x + w, y + h))
-        img.save("screenshots/gui_pixel_perfect.png")
-        print("Saved: screenshots/gui_pixel_perfect.png")
+        img.save("screenshots/gui_solid.png")
+        print("Saved: screenshots/gui_solid.png")
         
-        app.notebook.select(1)
+        app.bg_type_var.set("gradient")
+        app.switch_bg_type()
         root.update_idletasks()
         root.update()
         root.after(200)
@@ -43,16 +43,6 @@ def take_screenshots():
         img = ImageGrab.grab(bbox=(x, y, x + w, y + h))
         img.save("screenshots/gui_gradient.png")
         print("Saved: screenshots/gui_gradient.png")
-        
-        app.notebook.select(2)
-        root.update_idletasks()
-        root.update()
-        root.after(200)
-        root.update()
-        
-        img = ImageGrab.grab(bbox=(x, y, x + w, y + h))
-        img.save("screenshots/gui_batch.png")
-        print("Saved: screenshots/gui_batch.png")
         
         root.quit()
     

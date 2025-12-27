@@ -1,8 +1,9 @@
+import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 import pygame
 import cv2
 import numpy as np
 import sys
-import os
 import argparse
 import json
 import webbrowser
@@ -350,8 +351,12 @@ def generate_video(input_file, config, font_override=None, portrait_override=Non
 
     pygame.quit()
     
-    if config.get("auto_open") and not gif_only:
-        open_file(output_filename)
+    if config.get("auto_open"):
+        if gif_only:
+            gif_name = config.get("gif_filename", output_filename.replace(".mp4", ".gif"))
+            open_file(gif_name)
+        else:
+            open_file(output_filename)
     
     return output_filename
 

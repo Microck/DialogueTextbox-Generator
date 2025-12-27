@@ -1,50 +1,33 @@
-# Dialogue Textbox Generator
+# Dialogue Generator
 
-Generate pixel-perfect dialogue videos with typing animation, like Undertale/Deltarune.
+Generate Undertale/Deltarune-style dialogue videos with typing animation.
 
-![GUI Pixel Perfect](screenshots/gui_pixel_perfect.png)
+![GUI](screenshots/gui_solid.png)
 
 ## Features
 
-- Pixel-perfect text rendering (no anti-aliasing)
-- Gradient backgrounds (vertical/horizontal) or custom images
-- Character-by-character typing animation with punctuation pauses
-- Optional typing sound effects
+- Typing animation with punctuation pauses
+- Solid color, gradient, or image backgrounds
 - Export to MP4, WebM, or GIF
 - GUI, TUI, and CLI interfaces
-- Save/load settings as JSON
-- Batch processing
 
 ## Installation
 
 ```bash
-pip install pygame opencv-python numpy
-
-# Optional
-pip install tqdm      # Progress bars
-pip install Pillow    # GIF export
-pip install rich      # TUI interface
+pip install -r requirements.txt
 ```
 
-## Quick Start
+Requires Python 3.8-3.12 (pygame doesn't support 3.14 yet).
 
-### GUI (Recommended)
+## Usage
+
+### GUI
 
 ```bash
 python gui.py
 ```
 
-![GUI Gradient Mode](screenshots/gui_gradient.png)
-
-### CLI
-
-```bash
-# Pixel-perfect mode
-python generate.py -i dialogue.txt -o output.mp4 --font-size 24
-
-# Gradient mode
-python gradient.py --format webm --gradient vertical
-```
+Type dialogue directly, choose background type, and generate.
 
 ### TUI
 
@@ -52,83 +35,47 @@ python gradient.py --format webm --gradient vertical
 python tui.py
 ```
 
-## GUI Overview
+Interactive terminal interface with the same features.
 
-The GUI has three modes:
+### CLI
 
-| Mode | Description |
-|------|-------------|
-| **Pixel-Perfect** | Classic Undertale-style with solid background |
-| **Gradient** | Modern look with gradient or image backgrounds |
-| **Batch** | Process multiple dialogue files at once |
+```bash
+# Solid background
+python generate.py -i dialogue.txt -o output.mp4
 
-![GUI Batch Mode](screenshots/gui_batch.png)
+# Gradient background
+python gradient.py -i dialogue.txt --gradient vertical --format webm
+```
 
-**Quick Settings** are always visible. **Advanced Options** and **Export Options** are collapsed by default - click to expand.
-
-## CLI Reference
+## CLI Options
 
 ### generate.py
 
 ```
--i, --input FILE      Input text file (default: dialogue.txt)
--o, --output FILE     Output video file
--f, --font FILE       Font file path
--p, --portrait FILE   Portrait image
---font-size N         Font size (default: 20)
---max-width N         Max text width (default: 1000)
---char-speed N        Frames per character (default: 1)
---text-color R,G,B    Text color (default: 255,255,255)
---bg-color R,G,B      Background color (default: 0,0,0)
---gif                 Also export GIF
---auto-open           Open when done
---dry-run             Preview without rendering
---batch PATTERN       Process multiple files
+-i, --input       Input text file
+-o, --output      Output video file
+--font-size       Font size (default: 20)
+--max-width       Max width (default: 1000)
+--char-speed      Frames per char (default: 1)
+--text-color      R,G,B
+--bg-color        R,G,B
+--gif-only        Export GIF only
+--auto-open       Open when done
 ```
 
 ### gradient.py
 
 ```
--i, --input FILE         Input text file
--o, --output NAME        Output filename
---width N                Box width (default: 1000)
---height N               Box height (default: 209)
---gradient TYPE          vertical, horizontal, or none
---top-color R,G,B,A      Top/left gradient color
---bottom-color R,G,B,A   Bottom/right gradient color
---text-color R,G,B,A     Text color
---bg-image FILE          Background image (overrides gradient)
---format FORMAT          webm, mp4, or gif
+-i, --input       Input text file
+--width           Box width
+--height          Box height
+--gradient        vertical, horizontal, or none
+--top-color       R,G,B,A
+--bottom-color    R,G,B,A
+--bg-image        Background image
+--format          mp4, webm, or gif
+--auto-open       Open when done
 ```
-
-## Config Files
-
-Save your settings:
-
-```bash
-python generate.py --init-config    # Creates config.json
-python gradient.py --init-config    # Creates gradient_config.json
-```
-
-## Examples
-
-```bash
-# Green text on dark background
-python generate.py --text-color 0,255,0 --bg-color 20,20,40
-
-# Horizontal gradient with GIF output
-python gradient.py --gradient horizontal --format gif
-
-# Batch process all .txt files
-python generate.py --batch "*.txt"
-```
-
-## Requirements
-
-- Python 3.8+
-- pygame, opencv-python, numpy
-- Font file (.ttf/.otf) in current directory
-- ffmpeg (optional, for WebM export)
 
 ## License
 
