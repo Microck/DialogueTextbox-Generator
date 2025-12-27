@@ -24,14 +24,93 @@ class ModernStyle:
     TEXT_DIM = "#a0a0a0"
     SUCCESS = "#4ecca3"
     WARNING = "#ffc93c"
+    TOOLTIP_BG = "#2d2d44"
+    TOOLTIP_FG = "#ffffff"
+
+
+class Tooltip:
+    def __init__(self, widget, text, delay=400):
+        self.widget = widget
+        self.text = text
+        self.delay = delay
+        self.tip_window = None
+        self.after_id = None
+        
+        widget.bind("<Enter>", self._schedule)
+        widget.bind("<Leave>", self._hide)
+        widget.bind("<ButtonPress>", self._hide)
     
+    def _schedule(self, event=None):
+        self._hide()
+        self.after_id = self.widget.after(self.delay, self._show)
+    
+    def _show(self):
+        if self.tip_window:
+            return
+        x = self.widget.winfo_rootx() + 20
+        y = self.widget.winfo_rooty() + self.widget.winfo_height() + 5
+        
+        self.tip_window = tw = tk.Toplevel(self.widget)
+        tw.wm_overrideredirect(True)
+        tw.wm_geometry(f"+{x}+{y}")
+        
+        frame = tk.Frame(tw, bg=ModernStyle.TOOLTIP_BG, bd=1, relief=tk.SOLID)
+        frame.pack()
+        
+        label = tk.Label(
+            frame, text=self.text, justify=tk.LEFT,
+            bg=ModernStyle.TOOLTIP_BG, fg=ModernStyle.TOOLTIP_FG,
+            font=("Segoe UI", 9), padx=8, pady=4, wraplength=300
+        )
+        label.pack()
+    
+    def _hide(self, event=None):
+        if self.after_id:
+            self.widget.after_cancel(self.after_id)
+            self.after_id = None
+        if self.tip_window:
+            self.tip_window.destroy()
+            self.tip_window = None
+
+
+class CollapsibleFrame(ttk.Frame):
+    def __init__(self, parent, text, collapsed=True, style="Card.TFrame"):
+        super().__init__(parent, style=style)
+        
+        self.collapsed = collapsed
+        self._text = text
+        
+        self.header = ttk.Frame(self, style="Card.TFrame")
+        self.header.pack(fill=tk.X)
+        
+        self.toggle_btn = ttk.Label(
+            self.header, 
+            text=f"{'▶' if collapsed else '▼'} {text}",
+            style="Card.TLabel",
+            cursor="hand2"
+        )
+        self.toggle_btn.pack(side=tk.LEFT, pady=5)
+        self.toggle_btn.bind("<Button-1>", self._toggle)
+        
+        self.content = ttk.Frame(self, style="Card.TFrame", padding=(15, 10))
+        if not collapsed:
+            self.content.pack(fill=tk.X, padx=(15, 0))
+    
+    def _toggle(self, event=None):
+        self.collapsed = not self.collapsed
+        self.toggle_btn.config(text=f"{'▶' if self.collapsed else '▼'} {self._text}")
+        if self.collapsed:
+            self.content.pack_forget()
+        else:
+            self.content.pack(fill=tk.X, padx=(15, 0))
+
 
 class DialogueGeneratorGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("✦ Dialogue Textbox Generator")
-        self.root.geometry("1100x750")
-        self.root.minsize(1000, 700)
+        self.root.title("Dialogue Textbox Generator")
+        self.root.geometry("1000x700")
+        self.root.minsize(900, 650)
         self.root.configure(bg=ModernStyle.BG_DARK)
         
         self.setup_styles()
@@ -48,7 +127,7 @@ class DialogueGeneratorGUI:
         left_panel = ttk.Frame(content_frame, style="Dark.TFrame")
         left_panel.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10))
         
-        right_panel = ttk.Frame(content_frame, style="Dark.TFrame", width=400)
+        right_panel = ttk.Frame(content_frame, style="Dark.TFrame", width=380)
         right_panel.pack(side=tk.RIGHT, fill=tk.BOTH)
         right_panel.pack_propagate(False)
         
@@ -59,9 +138,9 @@ class DialogueGeneratorGUI:
         self.gradient_frame = ttk.Frame(self.notebook, style="Card.TFrame", padding=15)
         self.batch_frame = ttk.Frame(self.notebook, style="Card.TFrame", padding=15)
         
-        self.notebook.add(self.pixel_frame, text="  ⬛ Pixel-Perfect  ")
-        self.notebook.add(self.gradient_frame, text="  🌈 Gradient  ")
-        self.notebook.add(self.batch_frame, text="  📁 Batch  ")
+        self.notebook.add(self.pixel_frame, text="  Pixel-Perfect  ")
+        self.notebook.add(self.gradient_frame, text="  Gradient  ")
+        self.notebook.add(self.batch_frame, text="  Batch  ")
         
         self.setup_preview_panel(right_panel)
         self.setup_pixel_tab()
@@ -90,22 +169,22 @@ class DialogueGeneratorGUI:
         self.style.configure("Header.TLabel", 
                            background=ModernStyle.BG_DARK, 
                            foreground=ModernStyle.TEXT,
-                           font=("Segoe UI", 18, "bold"))
+                           font=("Segoe UI", 16, "bold"))
         self.style.configure("SubHeader.TLabel", 
                            background=ModernStyle.BG_DARK, 
                            foreground=ModernStyle.TEXT_DIM,
-                           font=("Segoe UI", 10))
+                           font=("Segoe UI", 9))
         self.style.configure("Preview.TLabel", 
                            background=ModernStyle.BG_LIGHT, 
                            foreground=ModernStyle.TEXT,
-                           font=("Segoe UI", 11, "bold"))
+                           font=("Segoe UI", 10, "bold"))
         
         self.style.configure("Dark.TNotebook", background=ModernStyle.BG_DARK)
         self.style.configure("Dark.TNotebook.Tab", 
                            background=ModernStyle.BG_MEDIUM,
                            foreground=ModernStyle.TEXT,
-                           padding=[15, 8],
-                           font=("Segoe UI", 10))
+                           padding=[12, 6],
+                           font=("Segoe UI", 9))
         self.style.map("Dark.TNotebook.Tab",
                       background=[("selected", ModernStyle.BG_LIGHT)],
                       foreground=[("selected", ModernStyle.TEXT)])
@@ -116,7 +195,7 @@ class DialogueGeneratorGUI:
         self.style.configure("Card.TLabelframe.Label", 
                            background=ModernStyle.BG_MEDIUM,
                            foreground=ModernStyle.ACCENT,
-                           font=("Segoe UI", 10, "bold"))
+                           font=("Segoe UI", 9, "bold"))
         
         self.style.configure("TEntry",
                            fieldbackground=ModernStyle.BG_LIGHT,
@@ -144,7 +223,7 @@ class DialogueGeneratorGUI:
         self.style.configure("Secondary.TButton",
                            background=ModernStyle.BG_LIGHT,
                            foreground=ModernStyle.TEXT,
-                           padding=[10, 5])
+                           padding=[8, 4])
         self.style.map("Secondary.TButton",
                       background=[("active", ModernStyle.BG_MEDIUM)])
         
@@ -158,8 +237,8 @@ class DialogueGeneratorGUI:
                            font=("Segoe UI", 9))
     
     def setup_fonts(self):
-        self.header_font = tkfont.Font(family="Segoe UI", size=18, weight="bold")
-        self.label_font = tkfont.Font(family="Segoe UI", size=10)
+        self.header_font = tkfont.Font(family="Segoe UI", size=16, weight="bold")
+        self.label_font = tkfont.Font(family="Segoe UI", size=9)
         self.mono_font = tkfont.Font(family="Consolas", size=10)
     
     def setup_header(self, parent):
@@ -172,15 +251,16 @@ class DialogueGeneratorGUI:
         title_label.pack(side=tk.LEFT)
         
         subtitle_label = ttk.Label(header_frame,
-                                  text="Create Undertale-style dialogue animations",
+                                  text="Undertale-style dialogue animations",
                                   style="SubHeader.TLabel")
-        subtitle_label.pack(side=tk.LEFT, padx=(15, 0), pady=(8, 0))
+        subtitle_label.pack(side=tk.LEFT, padx=(12, 0), pady=(6, 0))
     
     def setup_preview_panel(self, parent):
-        preview_label = ttk.Label(parent, text="👁 LIVE PREVIEW", style="Preview.TLabel")
-        preview_label.pack(fill=tk.X, pady=(0, 10))
+        preview_label = ttk.Label(parent, text="LIVE PREVIEW", style="Preview.TLabel")
+        preview_label.pack(fill=tk.X, pady=(0, 8))
+        Tooltip(preview_label, "Real-time preview of your dialogue box")
         
-        preview_container = ttk.Frame(parent, style="Preview.TFrame", padding=10)
+        preview_container = ttk.Frame(parent, style="Preview.TFrame", padding=8)
         preview_container.pack(fill=tk.BOTH, expand=True)
         
         self.preview_canvas = tk.Canvas(
@@ -192,32 +272,34 @@ class DialogueGeneratorGUI:
         self.preview_canvas.pack(fill=tk.BOTH, expand=True)
         
         info_frame = ttk.Frame(parent, style="Dark.TFrame")
-        info_frame.pack(fill=tk.X, pady=(10, 0))
+        info_frame.pack(fill=tk.X, pady=(8, 0))
         
-        self.preview_info_var = tk.StringVar(value="Preview will update as you change settings")
+        self.preview_info_var = tk.StringVar(value="Edit text below to preview")
         info_label = ttk.Label(info_frame, 
                               textvariable=self.preview_info_var,
                               style="Status.TLabel")
         info_label.pack()
         
         text_frame = ttk.Frame(parent, style="Dark.TFrame")
-        text_frame.pack(fill=tk.X, pady=(10, 0))
+        text_frame.pack(fill=tk.X, pady=(8, 0))
         
-        ttk.Label(text_frame, text="Preview Text:", style="Dark.TLabel").pack(anchor=tk.W)
+        text_label = ttk.Label(text_frame, text="Preview Text:", style="Dark.TLabel")
+        text_label.pack(anchor=tk.W)
+        Tooltip(text_label, "Type dialogue here to preview how it will look")
         
         self.preview_text_var = tk.StringVar(value="* Hello, world!\n* This is a preview.")
         self.preview_text = tk.Text(
             text_frame, 
-            height=4, 
+            height=3, 
             bg=ModernStyle.BG_LIGHT,
             fg=ModernStyle.TEXT,
             insertbackground=ModernStyle.TEXT,
             font=self.mono_font,
             relief=tk.FLAT,
-            padx=10,
-            pady=10
+            padx=8,
+            pady=8
         )
-        self.preview_text.pack(fill=tk.X, pady=(5, 0))
+        self.preview_text.pack(fill=tk.X, pady=(4, 0))
         self.preview_text.insert("1.0", "* Hello, world!\n* This is a preview.")
         self.preview_text.bind("<KeyRelease>", lambda e: self.update_preview())
     
@@ -237,8 +319,8 @@ class DialogueGeneratorGUI:
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
-        files_frame = ttk.LabelFrame(scrollable_frame, text="📂 Files", style="Card.TLabelframe", padding=15)
-        files_frame.pack(fill=tk.X, pady=(0, 10))
+        files_frame = ttk.LabelFrame(scrollable_frame, text="Files", style="Card.TLabelframe", padding=12)
+        files_frame.pack(fill=tk.X, pady=(0, 8))
         
         self.px_input_var = tk.StringVar(value="dialogue.txt")
         self.px_font_var = tk.StringVar()
@@ -246,88 +328,113 @@ class DialogueGeneratorGUI:
         self.px_output_var = tk.StringVar(value="dialogue.mp4")
         self.px_sound_var = tk.StringVar()
         
-        self.create_file_row(files_frame, "Text File:", self.px_input_var, [("Text", "*.txt")], 0)
-        self.create_file_row(files_frame, "Font:", self.px_font_var, [("Fonts", "*.ttf *.otf")], 1, auto_ext=(".ttf", ".otf"))
-        self.create_file_row(files_frame, "Portrait:", self.px_portrait_var, [("Images", "*.png *.jpg *.jpeg *.bmp")], 2, auto_ext=(".png", ".jpg", ".jpeg", ".bmp"))
-        self.create_file_row(files_frame, "Output:", self.px_output_var, None, 3)
-        self.create_file_row(files_frame, "Sound:", self.px_sound_var, [("Audio", "*.wav *.ogg *.mp3")], 4)
+        self.create_file_row(files_frame, "Text File:", self.px_input_var, [("Text", "*.txt")], 0,
+                            tooltip="Your dialogue text file")
+        self.create_file_row(files_frame, "Output:", self.px_output_var, None, 1,
+                            tooltip="Output video filename")
         
-        settings_frame = ttk.LabelFrame(scrollable_frame, text="⚙️ Settings", style="Card.TLabelframe", padding=15)
-        settings_frame.pack(fill=tk.X, pady=(0, 10))
+        quick_frame = ttk.LabelFrame(scrollable_frame, text="Quick Settings", style="Card.TLabelframe", padding=12)
+        quick_frame.pack(fill=tk.X, pady=(0, 8))
         
-        self.px_fontsize_var = tk.IntVar(value=20)
-        self.px_maxwidth_var = tk.IntVar(value=1000)
-        self.px_padding_var = tk.IntVar(value=10)
+        self.px_fontsize_var = tk.IntVar(value=24)
+        self.px_maxwidth_var = tk.IntVar(value=800)
+        self.px_padding_var = tk.IntVar(value=15)
         self.px_fps_var = tk.IntVar(value=30)
-        self.px_charspeed_var = tk.IntVar(value=1)
+        self.px_charspeed_var = tk.IntVar(value=2)
         self.px_dwell_var = tk.DoubleVar(value=2.0)
         
-        settings_grid = ttk.Frame(settings_frame, style="Card.TFrame")
-        settings_grid.pack(fill=tk.X)
+        quick_grid = ttk.Frame(quick_frame, style="Card.TFrame")
+        quick_grid.pack(fill=tk.X)
         
-        self.create_spinbox_row(settings_grid, "Font Size:", self.px_fontsize_var, 8, 100, 0, 0)
-        self.create_spinbox_row(settings_grid, "Max Width:", self.px_maxwidth_var, 100, 4000, 0, 2)
-        self.create_spinbox_row(settings_grid, "Padding:", self.px_padding_var, 0, 100, 1, 0)
-        self.create_spinbox_row(settings_grid, "FPS:", self.px_fps_var, 1, 60, 1, 2)
-        self.create_spinbox_row(settings_grid, "Char Speed:", self.px_charspeed_var, 1, 30, 2, 0)
-        self.create_spinbox_row(settings_grid, "Dwell (sec):", self.px_dwell_var, 0, 30, 2, 2, increment=0.5)
+        self.create_spinbox_row(quick_grid, "Font Size:", self.px_fontsize_var, 12, 72, 0, 0,
+                               tooltip="Text size in pixels")
+        self.create_spinbox_row(quick_grid, "Speed:", self.px_charspeed_var, 1, 10, 0, 2,
+                               tooltip="Typing speed (1=fastest, 10=slowest)")
         
-        colors_frame = ttk.LabelFrame(scrollable_frame, text="🎨 Colors", style="Card.TLabelframe", padding=15)
-        colors_frame.pack(fill=tk.X, pady=(0, 10))
+        colors_row = ttk.Frame(quick_frame, style="Card.TFrame")
+        colors_row.pack(fill=tk.X, pady=(8, 0))
         
         self.px_textcolor = [255, 255, 255]
         self.px_bgcolor = [0, 0, 0]
         
-        colors_grid = ttk.Frame(colors_frame, style="Card.TFrame")
-        colors_grid.pack(fill=tk.X)
-        
-        ttk.Label(colors_grid, text="Text:", style="Card.TLabel").grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
+        ttk.Label(colors_row, text="Text:", style="Card.TLabel").pack(side=tk.LEFT, padx=(0, 5))
         self.px_textcolor_btn = tk.Button(
-            colors_grid, 
-            text="", 
-            bg="#ffffff",
-            width=8,
-            height=1,
-            relief=tk.FLAT,
-            cursor="hand2",
-            command=lambda: self.pick_color("px_text")
+            colors_row, text="", bg="#ffffff", width=4, height=1,
+            relief=tk.FLAT, cursor="hand2", command=lambda: self.pick_color("px_text")
         )
-        self.px_textcolor_btn.grid(row=0, column=1, padx=(0, 30))
+        self.px_textcolor_btn.pack(side=tk.LEFT, padx=(0, 15))
+        Tooltip(self.px_textcolor_btn, "Text color")
         
-        ttk.Label(colors_grid, text="Background:", style="Card.TLabel").grid(row=0, column=2, sticky=tk.W, padx=(0, 10))
+        ttk.Label(colors_row, text="Background:", style="Card.TLabel").pack(side=tk.LEFT, padx=(0, 5))
         self.px_bgcolor_btn = tk.Button(
-            colors_grid, 
-            text="", 
-            bg="#000000",
-            width=8,
-            height=1,
-            relief=tk.FLAT,
-            cursor="hand2",
-            command=lambda: self.pick_color("px_bg")
+            colors_row, text="", bg="#000000", width=4, height=1,
+            relief=tk.FLAT, cursor="hand2", command=lambda: self.pick_color("px_bg")
         )
-        self.px_bgcolor_btn.grid(row=0, column=3)
+        self.px_bgcolor_btn.pack(side=tk.LEFT)
+        Tooltip(self.px_bgcolor_btn, "Background color")
         
-        options_frame = ttk.LabelFrame(scrollable_frame, text="📦 Export Options", style="Card.TLabelframe", padding=15)
-        options_frame.pack(fill=tk.X, pady=(0, 10))
+        advanced = CollapsibleFrame(scrollable_frame, "Advanced Options", collapsed=True)
+        advanced.pack(fill=tk.X, pady=(0, 8))
+        
+        adv_files = ttk.Frame(advanced.content, style="Card.TFrame")
+        adv_files.pack(fill=tk.X)
+        
+        self.create_file_row(adv_files, "Font:", self.px_font_var, [("Fonts", "*.ttf *.otf")], 0, 
+                            auto_ext=(".ttf", ".otf"), tooltip="Custom font file (auto-detects if empty)")
+        self.create_file_row(adv_files, "Portrait:", self.px_portrait_var, [("Images", "*.png *.jpg")], 1,
+                            tooltip="Character portrait image")
+        self.create_file_row(adv_files, "Sound:", self.px_sound_var, [("Audio", "*.wav *.ogg *.mp3")], 2,
+                            tooltip="Typing sound effect")
+        
+        adv_settings = ttk.Frame(advanced.content, style="Card.TFrame")
+        adv_settings.pack(fill=tk.X, pady=(8, 0))
+        
+        self.create_spinbox_row(adv_settings, "Max Width:", self.px_maxwidth_var, 200, 2000, 0, 0,
+                               tooltip="Max text width before wrapping")
+        self.create_spinbox_row(adv_settings, "Padding:", self.px_padding_var, 0, 50, 0, 2,
+                               tooltip="Space around text")
+        self.create_spinbox_row(adv_settings, "FPS:", self.px_fps_var, 15, 60, 1, 0,
+                               tooltip="Video frame rate")
+        self.create_spinbox_row(adv_settings, "Dwell:", self.px_dwell_var, 0, 10, 1, 2, increment=0.5,
+                               tooltip="Pause after text finishes (seconds)")
+        
+        export = CollapsibleFrame(scrollable_frame, "Export Options", collapsed=True)
+        export.pack(fill=tk.X, pady=(0, 8))
         
         self.px_gif_var = tk.BooleanVar(value=False)
         self.px_gifonly_var = tk.BooleanVar(value=False)
-        self.px_autoopen_var = tk.BooleanVar(value=False)
+        self.px_autoopen_var = tk.BooleanVar(value=True)
         
-        opts_grid = ttk.Frame(options_frame, style="Card.TFrame")
-        opts_grid.pack(fill=tk.X)
+        gif_cb = ttk.Checkbutton(export.content, text="Also export GIF", variable=self.px_gif_var, style="TCheckbutton")
+        gif_cb.pack(anchor=tk.W)
+        Tooltip(gif_cb, "Create a GIF alongside the video")
         
-        ttk.Checkbutton(opts_grid, text="Export GIF", variable=self.px_gif_var, style="TCheckbutton").grid(row=0, column=0, padx=(0, 20))
-        ttk.Checkbutton(opts_grid, text="GIF Only", variable=self.px_gifonly_var, style="TCheckbutton").grid(row=0, column=1, padx=(0, 20))
-        ttk.Checkbutton(opts_grid, text="Auto Open", variable=self.px_autoopen_var, style="TCheckbutton").grid(row=0, column=2)
+        gifonly_cb = ttk.Checkbutton(export.content, text="GIF only (no video)", variable=self.px_gifonly_var, style="TCheckbutton")
+        gifonly_cb.pack(anchor=tk.W)
+        Tooltip(gifonly_cb, "Only create GIF, skip video")
+        
+        auto_cb = ttk.Checkbutton(export.content, text="Open when done", variable=self.px_autoopen_var, style="TCheckbutton")
+        auto_cb.pack(anchor=tk.W)
+        Tooltip(auto_cb, "Automatically open the output file")
         
         btn_frame = ttk.Frame(scrollable_frame, style="Card.TFrame")
-        btn_frame.pack(fill=tk.X, pady=(10, 0))
+        btn_frame.pack(fill=tk.X, pady=(8, 0))
         
-        ttk.Button(btn_frame, text="🔍 Preview Info", command=self.px_dry_run, style="Secondary.TButton").pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(btn_frame, text="🎬 Generate Video", command=self.px_generate, style="Accent.TButton").pack(side=tk.LEFT)
-        ttk.Button(btn_frame, text="💾 Save", command=self.px_save_config, style="Secondary.TButton").pack(side=tk.RIGHT, padx=(10, 0))
-        ttk.Button(btn_frame, text="📂 Load", command=self.px_load_config, style="Secondary.TButton").pack(side=tk.RIGHT)
+        gen_btn = ttk.Button(btn_frame, text="Generate Video", command=self.px_generate, style="Accent.TButton")
+        gen_btn.pack(side=tk.LEFT)
+        Tooltip(gen_btn, "Create the dialogue video")
+        
+        preview_btn = ttk.Button(btn_frame, text="Preview Info", command=self.px_dry_run, style="Secondary.TButton")
+        preview_btn.pack(side=tk.LEFT, padx=(8, 0))
+        Tooltip(preview_btn, "Show estimated duration without rendering")
+        
+        save_btn = ttk.Button(btn_frame, text="Save Config", command=self.px_save_config, style="Secondary.TButton")
+        save_btn.pack(side=tk.RIGHT)
+        Tooltip(save_btn, "Save current settings to config.json")
+        
+        load_btn = ttk.Button(btn_frame, text="Load Config", command=self.px_load_config, style="Secondary.TButton")
+        load_btn.pack(side=tk.RIGHT, padx=(0, 8))
+        Tooltip(load_btn, "Load settings from config.json")
     
     def setup_gradient_tab(self):
         canvas = tk.Canvas(self.gradient_frame, bg=ModernStyle.BG_MEDIUM, highlightthickness=0)
@@ -345,166 +452,233 @@ class DialogueGeneratorGUI:
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
-        files_frame = ttk.LabelFrame(scrollable_frame, text="📂 Files", style="Card.TLabelframe", padding=15)
-        files_frame.pack(fill=tk.X, pady=(0, 10))
+        files_frame = ttk.LabelFrame(scrollable_frame, text="Files", style="Card.TLabelframe", padding=12)
+        files_frame.pack(fill=tk.X, pady=(0, 8))
         
         self.gr_input_var = tk.StringVar(value="dialogue.txt")
         self.gr_font_var = tk.StringVar()
         self.gr_bgimage_var = tk.StringVar()
         self.gr_output_var = tk.StringVar()
         
-        self.create_file_row(files_frame, "Text File:", self.gr_input_var, [("Text", "*.txt")], 0)
-        self.create_file_row(files_frame, "Font:", self.gr_font_var, [("Fonts", "*.ttf *.otf")], 1, auto_ext=(".ttf", ".otf"))
-        self.create_file_row(files_frame, "BG Image:", self.gr_bgimage_var, [("Images", "*.png *.jpg *.jpeg")], 2)
-        self.create_file_row(files_frame, "Output:", self.gr_output_var, None, 3)
+        self.create_file_row(files_frame, "Text File:", self.gr_input_var, [("Text", "*.txt")], 0,
+                            tooltip="Your dialogue text file")
+        self.create_file_row(files_frame, "Output:", self.gr_output_var, None, 1,
+                            tooltip="Output filename (leave empty for auto)")
         
-        settings_frame = ttk.LabelFrame(scrollable_frame, text="📐 Box Settings", style="Card.TLabelframe", padding=15)
-        settings_frame.pack(fill=tk.X, pady=(0, 10))
+        quick_frame = ttk.LabelFrame(scrollable_frame, text="Quick Settings", style="Card.TLabelframe", padding=12)
+        quick_frame.pack(fill=tk.X, pady=(0, 8))
         
-        self.gr_width_var = tk.IntVar(value=1000)
-        self.gr_height_var = tk.IntVar(value=209)
+        self.gr_width_var = tk.IntVar(value=800)
+        self.gr_height_var = tk.IntVar(value=200)
         self.gr_padding_var = tk.IntVar(value=20)
-        self.gr_fontsize_var = tk.IntVar(value=35)
+        self.gr_fontsize_var = tk.IntVar(value=32)
         self.gr_fps_var = tk.IntVar(value=30)
-        self.gr_dwell_var = tk.DoubleVar(value=3.0)
+        self.gr_dwell_var = tk.DoubleVar(value=2.0)
         
-        settings_grid = ttk.Frame(settings_frame, style="Card.TFrame")
-        settings_grid.pack(fill=tk.X)
+        quick_grid = ttk.Frame(quick_frame, style="Card.TFrame")
+        quick_grid.pack(fill=tk.X)
         
-        self.create_spinbox_row(settings_grid, "Width:", self.gr_width_var, 100, 4000, 0, 0)
-        self.create_spinbox_row(settings_grid, "Height:", self.gr_height_var, 50, 2000, 0, 2)
-        self.create_spinbox_row(settings_grid, "Padding:", self.gr_padding_var, 0, 100, 1, 0)
-        self.create_spinbox_row(settings_grid, "Font Size:", self.gr_fontsize_var, 8, 100, 1, 2)
-        self.create_spinbox_row(settings_grid, "FPS:", self.gr_fps_var, 1, 60, 2, 0)
-        self.create_spinbox_row(settings_grid, "Dwell (sec):", self.gr_dwell_var, 0, 30, 2, 2, increment=0.5)
+        self.create_spinbox_row(quick_grid, "Font Size:", self.gr_fontsize_var, 16, 72, 0, 0,
+                               tooltip="Text size in pixels")
+        self.create_spinbox_row(quick_grid, "Box Height:", self.gr_height_var, 100, 500, 0, 2,
+                               tooltip="Dialogue box height")
         
-        gradient_frame = ttk.LabelFrame(scrollable_frame, text="🌈 Gradient", style="Card.TLabelframe", padding=15)
-        gradient_frame.pack(fill=tk.X, pady=(0, 10))
+        gradient_row = ttk.Frame(quick_frame, style="Card.TFrame")
+        gradient_row.pack(fill=tk.X, pady=(8, 0))
         
         self.gr_direction_var = tk.StringVar(value="vertical")
         self.gr_topcolor = [255, 255, 255, 255]
-        self.gr_bottomcolor = [121, 121, 121, 255]
+        self.gr_bottomcolor = [180, 180, 180, 255]
         self.gr_textcolor = [0, 0, 0, 255]
         
-        dir_frame = ttk.Frame(gradient_frame, style="Card.TFrame")
-        dir_frame.pack(fill=tk.X, pady=(0, 15))
-        
-        ttk.Label(dir_frame, text="Direction:", style="Card.TLabel").pack(side=tk.LEFT, padx=(0, 10))
-        dir_combo = ttk.Combobox(dir_frame, textvariable=self.gr_direction_var, 
-                                values=["vertical", "horizontal", "none"], width=12, state="readonly")
-        dir_combo.pack(side=tk.LEFT)
+        ttk.Label(gradient_row, text="Direction:", style="Card.TLabel").pack(side=tk.LEFT, padx=(0, 5))
+        dir_combo = ttk.Combobox(gradient_row, textvariable=self.gr_direction_var, 
+                                values=["vertical", "horizontal", "none"], width=10, state="readonly")
+        dir_combo.pack(side=tk.LEFT, padx=(0, 15))
         dir_combo.bind("<<ComboboxSelected>>", lambda e: self.update_preview())
+        Tooltip(dir_combo, "Gradient direction (or solid color)")
         
-        colors_grid = ttk.Frame(gradient_frame, style="Card.TFrame")
-        colors_grid.pack(fill=tk.X)
-        
-        ttk.Label(colors_grid, text="Top/Left:", style="Card.TLabel").grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
-        self.gr_topcolor_btn = tk.Button(colors_grid, text="", bg="#ffffff", width=6, height=1,
+        ttk.Label(gradient_row, text="Top:", style="Card.TLabel").pack(side=tk.LEFT, padx=(0, 5))
+        self.gr_topcolor_btn = tk.Button(gradient_row, text="", bg="#ffffff", width=3, height=1,
                                         relief=tk.FLAT, cursor="hand2", command=lambda: self.pick_color("gr_top"))
-        self.gr_topcolor_btn.grid(row=0, column=1, padx=(0, 20))
+        self.gr_topcolor_btn.pack(side=tk.LEFT, padx=(0, 10))
+        Tooltip(self.gr_topcolor_btn, "Top/left gradient color")
         
-        ttk.Label(colors_grid, text="Bottom/Right:", style="Card.TLabel").grid(row=0, column=2, sticky=tk.W, padx=(0, 10))
-        self.gr_bottomcolor_btn = tk.Button(colors_grid, text="", bg="#797979", width=6, height=1,
+        ttk.Label(gradient_row, text="Bottom:", style="Card.TLabel").pack(side=tk.LEFT, padx=(0, 5))
+        self.gr_bottomcolor_btn = tk.Button(gradient_row, text="", bg="#b4b4b4", width=3, height=1,
                                            relief=tk.FLAT, cursor="hand2", command=lambda: self.pick_color("gr_bottom"))
-        self.gr_bottomcolor_btn.grid(row=0, column=3, padx=(0, 20))
+        self.gr_bottomcolor_btn.pack(side=tk.LEFT, padx=(0, 10))
+        Tooltip(self.gr_bottomcolor_btn, "Bottom/right gradient color")
         
-        ttk.Label(colors_grid, text="Text:", style="Card.TLabel").grid(row=0, column=4, sticky=tk.W, padx=(0, 10))
-        self.gr_textcolor_btn = tk.Button(colors_grid, text="", bg="#000000", width=6, height=1,
+        ttk.Label(gradient_row, text="Text:", style="Card.TLabel").pack(side=tk.LEFT, padx=(0, 5))
+        self.gr_textcolor_btn = tk.Button(gradient_row, text="", bg="#000000", width=3, height=1,
                                          relief=tk.FLAT, cursor="hand2", command=lambda: self.pick_color("gr_text"))
-        self.gr_textcolor_btn.grid(row=0, column=5)
+        self.gr_textcolor_btn.pack(side=tk.LEFT)
+        Tooltip(self.gr_textcolor_btn, "Text color")
         
-        options_frame = ttk.LabelFrame(scrollable_frame, text="📦 Export Options", style="Card.TLabelframe", padding=15)
-        options_frame.pack(fill=tk.X, pady=(0, 10))
+        advanced = CollapsibleFrame(scrollable_frame, "Advanced Options", collapsed=True)
+        advanced.pack(fill=tk.X, pady=(0, 8))
+        
+        adv_files = ttk.Frame(advanced.content, style="Card.TFrame")
+        adv_files.pack(fill=tk.X)
+        
+        self.create_file_row(adv_files, "Font:", self.gr_font_var, [("Fonts", "*.ttf *.otf")], 0,
+                            auto_ext=(".ttf", ".otf"), tooltip="Custom font file")
+        self.create_file_row(adv_files, "BG Image:", self.gr_bgimage_var, [("Images", "*.png *.jpg")], 1,
+                            tooltip="Background image (overrides gradient)")
+        
+        adv_settings = ttk.Frame(advanced.content, style="Card.TFrame")
+        adv_settings.pack(fill=tk.X, pady=(8, 0))
+        
+        self.create_spinbox_row(adv_settings, "Width:", self.gr_width_var, 400, 1920, 0, 0,
+                               tooltip="Box width in pixels")
+        self.create_spinbox_row(adv_settings, "Padding:", self.gr_padding_var, 5, 50, 0, 2,
+                               tooltip="Space inside box")
+        self.create_spinbox_row(adv_settings, "FPS:", self.gr_fps_var, 15, 60, 1, 0,
+                               tooltip="Video frame rate")
+        self.create_spinbox_row(adv_settings, "Dwell:", self.gr_dwell_var, 0, 10, 1, 2, increment=0.5,
+                               tooltip="Pause after text (seconds)")
+        
+        export = CollapsibleFrame(scrollable_frame, "Export Options", collapsed=True)
+        export.pack(fill=tk.X, pady=(0, 8))
         
         self.gr_format_var = tk.StringVar(value="webm")
-        self.gr_autoopen_var = tk.BooleanVar(value=False)
+        self.gr_autoopen_var = tk.BooleanVar(value=True)
         
-        opts_grid = ttk.Frame(options_frame, style="Card.TFrame")
-        opts_grid.pack(fill=tk.X)
+        format_row = ttk.Frame(export.content, style="Card.TFrame")
+        format_row.pack(fill=tk.X)
         
-        ttk.Label(opts_grid, text="Format:", style="Card.TLabel").grid(row=0, column=0, sticky=tk.W, padx=(0, 10))
-        format_combo = ttk.Combobox(opts_grid, textvariable=self.gr_format_var, 
-                                   values=["webm", "mp4", "gif"], width=10, state="readonly")
-        format_combo.grid(row=0, column=1, padx=(0, 30))
+        ttk.Label(format_row, text="Format:", style="Card.TLabel").pack(side=tk.LEFT, padx=(0, 5))
+        format_combo = ttk.Combobox(format_row, textvariable=self.gr_format_var, 
+                                   values=["webm", "mp4", "gif"], width=8, state="readonly")
+        format_combo.pack(side=tk.LEFT)
+        Tooltip(format_combo, "Output video format")
         
-        ttk.Checkbutton(opts_grid, text="Auto Open", variable=self.gr_autoopen_var, style="TCheckbutton").grid(row=0, column=2)
+        auto_cb = ttk.Checkbutton(export.content, text="Open when done", variable=self.gr_autoopen_var, style="TCheckbutton")
+        auto_cb.pack(anchor=tk.W, pady=(5, 0))
+        Tooltip(auto_cb, "Automatically open the output file")
         
         btn_frame = ttk.Frame(scrollable_frame, style="Card.TFrame")
-        btn_frame.pack(fill=tk.X, pady=(10, 0))
+        btn_frame.pack(fill=tk.X, pady=(8, 0))
         
-        ttk.Button(btn_frame, text="🔍 Preview Info", command=self.gr_dry_run, style="Secondary.TButton").pack(side=tk.LEFT, padx=(0, 10))
-        ttk.Button(btn_frame, text="🎬 Generate Video", command=self.gr_generate, style="Accent.TButton").pack(side=tk.LEFT)
-        ttk.Button(btn_frame, text="💾 Save", command=self.gr_save_config, style="Secondary.TButton").pack(side=tk.RIGHT, padx=(10, 0))
-        ttk.Button(btn_frame, text="📂 Load", command=self.gr_load_config, style="Secondary.TButton").pack(side=tk.RIGHT)
+        gen_btn = ttk.Button(btn_frame, text="Generate Video", command=self.gr_generate, style="Accent.TButton")
+        gen_btn.pack(side=tk.LEFT)
+        Tooltip(gen_btn, "Create the dialogue video")
+        
+        preview_btn = ttk.Button(btn_frame, text="Preview Info", command=self.gr_dry_run, style="Secondary.TButton")
+        preview_btn.pack(side=tk.LEFT, padx=(8, 0))
+        Tooltip(preview_btn, "Show estimated duration")
+        
+        save_btn = ttk.Button(btn_frame, text="Save Config", command=self.gr_save_config, style="Secondary.TButton")
+        save_btn.pack(side=tk.RIGHT)
+        Tooltip(save_btn, "Save to gradient_config.json")
+        
+        load_btn = ttk.Button(btn_frame, text="Load Config", command=self.gr_load_config, style="Secondary.TButton")
+        load_btn.pack(side=tk.RIGHT, padx=(0, 8))
+        Tooltip(load_btn, "Load from gradient_config.json")
     
     def setup_batch_tab(self):
         header_label = ttk.Label(self.batch_frame, 
                                 text="Process multiple dialogue files at once",
                                 style="Card.TLabel",
-                                font=("Segoe UI", 11))
-        header_label.pack(pady=(0, 15))
+                                font=("Segoe UI", 10))
+        header_label.pack(pady=(0, 12))
         
-        pattern_frame = ttk.LabelFrame(self.batch_frame, text="📁 Batch Settings", style="Card.TLabelframe", padding=15)
-        pattern_frame.pack(fill=tk.X, pady=(0, 15))
+        pattern_frame = ttk.LabelFrame(self.batch_frame, text="Batch Settings", style="Card.TLabelframe", padding=12)
+        pattern_frame.pack(fill=tk.X, pady=(0, 12))
         
         self.batch_pattern_var = tk.StringVar(value="*.txt")
         self.batch_gen_var = tk.StringVar(value="generate")
         
-        ttk.Label(pattern_frame, text="File Pattern:", style="Card.TLabel").grid(row=0, column=0, sticky=tk.W, pady=5)
-        ttk.Entry(pattern_frame, textvariable=self.batch_pattern_var, width=40).grid(row=0, column=1, padx=10, pady=5)
+        pattern_row = ttk.Frame(pattern_frame, style="Card.TFrame")
+        pattern_row.pack(fill=tk.X, pady=4)
         
-        ttk.Label(pattern_frame, text="Generator:", style="Card.TLabel").grid(row=1, column=0, sticky=tk.W, pady=5)
-        ttk.Combobox(pattern_frame, textvariable=self.batch_gen_var, 
-                    values=["generate", "gradient"], width=37, state="readonly").grid(row=1, column=1, padx=10, pady=5)
+        pattern_lbl = ttk.Label(pattern_row, text="File Pattern:", style="Card.TLabel")
+        pattern_lbl.pack(side=tk.LEFT, padx=(0, 8))
+        Tooltip(pattern_lbl, "Glob pattern to match files (e.g., *.txt, dialogues/*.txt)")
         
-        ttk.Button(self.batch_frame, text="🚀 Run Batch Processing", 
-                  command=self.run_batch, style="Accent.TButton").pack(pady=15)
+        ttk.Entry(pattern_row, textvariable=self.batch_pattern_var, width=30).pack(side=tk.LEFT)
         
-        output_frame = ttk.LabelFrame(self.batch_frame, text="📋 Output", style="Card.TLabelframe", padding=10)
+        gen_row = ttk.Frame(pattern_frame, style="Card.TFrame")
+        gen_row.pack(fill=tk.X, pady=4)
+        
+        gen_lbl = ttk.Label(gen_row, text="Generator:", style="Card.TLabel")
+        gen_lbl.pack(side=tk.LEFT, padx=(0, 8))
+        Tooltip(gen_lbl, "Which generator to use for batch processing")
+        
+        gen_combo = ttk.Combobox(gen_row, textvariable=self.batch_gen_var, 
+                    values=["generate", "gradient"], width=27, state="readonly")
+        gen_combo.pack(side=tk.LEFT)
+        
+        run_btn = ttk.Button(self.batch_frame, text="Run Batch Processing", 
+                  command=self.run_batch, style="Accent.TButton")
+        run_btn.pack(pady=12)
+        Tooltip(run_btn, "Process all matching files")
+        
+        output_frame = ttk.LabelFrame(self.batch_frame, text="Output", style="Card.TLabelframe", padding=8)
         output_frame.pack(fill=tk.BOTH, expand=True)
         
         self.batch_output = tk.Text(
             output_frame, 
-            height=12,
+            height=10,
             bg=ModernStyle.BG_LIGHT,
             fg=ModernStyle.TEXT,
             font=self.mono_font,
             relief=tk.FLAT,
-            padx=10,
-            pady=10
+            padx=8,
+            pady=8
         )
         self.batch_output.pack(fill=tk.BOTH, expand=True)
     
     def setup_status_bar(self, parent):
-        status_frame = ttk.Frame(parent, style="Card.TFrame", padding=8)
-        status_frame.pack(fill=tk.X, side=tk.BOTTOM, pady=(10, 0))
+        status_frame = ttk.Frame(parent, style="Card.TFrame", padding=6)
+        status_frame.pack(fill=tk.X, side=tk.BOTTOM, pady=(8, 0))
         
-        self.status_var = tk.StringVar(value="✓ Ready")
+        self.status_var = tk.StringVar(value="Ready")
         status_label = ttk.Label(status_frame, textvariable=self.status_var, style="Status.TLabel")
         status_label.pack(side=tk.LEFT)
         
-        version_label = ttk.Label(status_frame, text="v2.0", style="Status.TLabel")
+        version_label = ttk.Label(status_frame, text="v2.1", style="Status.TLabel")
         version_label.pack(side=tk.RIGHT)
     
-    def create_file_row(self, parent, label, var, filetypes, row, auto_ext=None):
-        ttk.Label(parent, text=label, style="Card.TLabel").grid(row=row, column=0, sticky=tk.W, pady=5)
-        ttk.Entry(parent, textvariable=var, width=45).grid(row=row, column=1, padx=10, pady=5)
+    def create_file_row(self, parent, label, var, filetypes, row, auto_ext=None, tooltip=None):
+        lbl = ttk.Label(parent, text=label, style="Card.TLabel")
+        lbl.grid(row=row, column=0, sticky=tk.W, pady=4)
+        entry = ttk.Entry(parent, textvariable=var, width=35)
+        entry.grid(row=row, column=1, padx=8, pady=4)
+        
+        if tooltip:
+            Tooltip(lbl, tooltip)
+            Tooltip(entry, tooltip)
         
         if filetypes:
-            ttk.Button(parent, text="Browse", style="Secondary.TButton",
-                      command=lambda: self.browse_file(var, filetypes)).grid(row=row, column=2, padx=2)
+            btn = ttk.Button(parent, text="...", style="Secondary.TButton", width=3,
+                      command=lambda: self.browse_file(var, filetypes))
+            btn.grid(row=row, column=2, padx=2)
+            Tooltip(btn, "Browse")
         
         if auto_ext:
-            ttk.Button(parent, text="Auto", style="Secondary.TButton",
-                      command=lambda: self.auto_find(var, auto_ext)).grid(row=row, column=3, padx=2)
+            auto_btn = ttk.Button(parent, text="Auto", style="Secondary.TButton",
+                      command=lambda: self.auto_find(var, auto_ext))
+            auto_btn.grid(row=row, column=3, padx=2)
+            Tooltip(auto_btn, "Auto-detect file")
+        
+        return entry
     
-    def create_spinbox_row(self, parent, label, var, from_, to, row, col, increment=1):
-        ttk.Label(parent, text=label, style="Card.TLabel").grid(row=row, column=col, sticky=tk.W, pady=8, padx=(0 if col == 0 else 30, 5))
-        spinbox = ttk.Spinbox(parent, from_=from_, to=to, textvariable=var, width=10, increment=increment)
-        spinbox.grid(row=row, column=col+1, pady=8)
+    def create_spinbox_row(self, parent, label, var, from_, to, row, col, increment=1, tooltip=None):
+        lbl = ttk.Label(parent, text=label, style="Card.TLabel")
+        lbl.grid(row=row, column=col, sticky=tk.W, pady=6, padx=(0 if col == 0 else 20, 4))
+        spinbox = ttk.Spinbox(parent, from_=from_, to=to, textvariable=var, width=8, increment=increment)
+        spinbox.grid(row=row, column=col+1, pady=6)
         spinbox.bind("<KeyRelease>", lambda e: self.update_preview())
         spinbox.bind("<<Increment>>", lambda e: self.root.after(10, self.update_preview))
         spinbox.bind("<<Decrement>>", lambda e: self.root.after(10, self.update_preview))
+        
+        if tooltip:
+            Tooltip(lbl, tooltip)
+            Tooltip(spinbox, tooltip)
+        
+        return spinbox
     
     def bind_preview_updates(self):
         for var in [self.px_fontsize_var, self.px_padding_var, self.gr_width_var, 
@@ -526,14 +700,16 @@ class DialogueGeneratorGUI:
         
         if current_tab == 0:
             self.draw_pixel_preview(canvas_width, canvas_height)
-        else:
+        elif current_tab == 1:
             self.draw_gradient_preview(canvas_width, canvas_height)
+        else:
+            self.draw_batch_preview(canvas_width, canvas_height)
     
     def draw_pixel_preview(self, canvas_width, canvas_height):
         bg_hex = "#{:02x}{:02x}{:02x}".format(*self.px_bgcolor[:3])
         text_hex = "#{:02x}{:02x}{:02x}".format(*self.px_textcolor[:3])
         
-        padding = 20
+        padding = 15
         box_width = canvas_width - padding * 2
         box_height = canvas_height - padding * 2
         
@@ -546,24 +722,24 @@ class DialogueGeneratorGUI:
         preview_text = self.preview_text.get("1.0", "end-1c")
         lines = preview_text.split("\n")[:4]
         
-        font_size = max(8, min(self.px_fontsize_var.get(), 24))
-        text_padding = self.px_padding_var.get()
+        font_size = max(10, min(self.px_fontsize_var.get(), 28))
+        text_padding = min(self.px_padding_var.get(), 20)
         
-        y_pos = padding + text_padding + 10
+        y_pos = padding + text_padding + 8
         for line in lines:
             self.preview_canvas.create_text(
-                padding + text_padding + 10, y_pos,
-                text=line[:50],
+                padding + text_padding + 8, y_pos,
+                text=line[:60],
                 fill=text_hex,
                 anchor=tk.NW,
                 font=("Consolas", font_size)
             )
-            y_pos += font_size + 8
+            y_pos += font_size + 6
         
-        self.preview_info_var.set(f"Pixel-Perfect Mode | Font: {self.px_fontsize_var.get()}px | Padding: {self.px_padding_var.get()}px")
+        self.preview_info_var.set(f"Pixel-Perfect | {self.px_fontsize_var.get()}px | Speed: {self.px_charspeed_var.get()}")
     
     def draw_gradient_preview(self, canvas_width, canvas_height):
-        padding = 20
+        padding = 15
         box_width = canvas_width - padding * 2
         box_height = canvas_height - padding * 2
         
@@ -579,7 +755,7 @@ class DialogueGeneratorGUI:
                 fill=hex_color, outline=ModernStyle.ACCENT, width=2
             )
         else:
-            steps = 50
+            steps = 40
             if direction == "vertical":
                 step_height = box_height / steps
                 for i in range(steps):
@@ -621,21 +797,31 @@ class DialogueGeneratorGUI:
         preview_text = self.preview_text.get("1.0", "end-1c")
         lines = preview_text.split("\n")[:4]
         
-        font_size = max(8, min(self.gr_fontsize_var.get(), 24))
-        text_padding = self.gr_padding_var.get()
+        font_size = max(10, min(self.gr_fontsize_var.get(), 28))
+        text_padding = min(self.gr_padding_var.get(), 20)
         
-        y_pos = padding + text_padding + 10
+        y_pos = padding + text_padding + 8
         for line in lines:
             self.preview_canvas.create_text(
-                padding + text_padding + 10, y_pos,
-                text=line[:50],
+                padding + text_padding + 8, y_pos,
+                text=line[:60],
                 fill=text_hex,
                 anchor=tk.NW,
                 font=("Consolas", font_size)
             )
-            y_pos += font_size + 8
+            y_pos += font_size + 6
         
-        self.preview_info_var.set(f"Gradient Mode ({direction}) | {self.gr_width_var.get()}x{self.gr_height_var.get()} | Font: {self.gr_fontsize_var.get()}px")
+        self.preview_info_var.set(f"Gradient ({direction}) | {self.gr_width_var.get()}x{self.gr_height_var.get()} | {self.gr_fontsize_var.get()}px")
+    
+    def draw_batch_preview(self, canvas_width, canvas_height):
+        self.preview_canvas.create_text(
+            canvas_width // 2, canvas_height // 2,
+            text="Batch mode\nSelect files and run",
+            fill=ModernStyle.TEXT_DIM,
+            font=("Segoe UI", 12),
+            justify=tk.CENTER
+        )
+        self.preview_info_var.set("Batch processing mode")
     
     def browse_file(self, var, filetypes):
         path = filedialog.askopenfilename(filetypes=filetypes)
@@ -649,7 +835,7 @@ class DialogueGeneratorGUI:
                 var.set(f)
                 self.update_preview()
                 return
-        messagebox.showinfo("Not Found", f"No {extensions} file found in current directory")
+        messagebox.showinfo("Not Found", f"No {extensions[0]} file found")
     
     def pick_color(self, target):
         color = colorchooser.askcolor(title="Choose Color")
@@ -735,7 +921,7 @@ class DialogueGeneratorGUI:
     
     def run_command(self, cmd, callback=None):
         def worker():
-            self.status_var.set("⏳ Running...")
+            self.status_var.set("Running...")
             try:
                 result = subprocess.run(cmd, capture_output=True, text=True)
                 output = result.stdout + result.stderr
@@ -750,9 +936,9 @@ class DialogueGeneratorGUI:
         thread.start()
     
     def show_result(self, output, success):
-        self.status_var.set("✓ Done" if success else "✗ Error")
+        self.status_var.set("Done" if success else "Error")
         if success:
-            messagebox.showinfo("Complete", output or "Video generated successfully!")
+            messagebox.showinfo("Complete", output or "Generated successfully!")
         else:
             messagebox.showerror("Error", output or "Generation failed")
     
@@ -780,7 +966,7 @@ class DialogueGeneratorGUI:
         def update_output(output, success):
             self.batch_output.delete(1.0, tk.END)
             self.batch_output.insert(tk.END, output)
-            self.status_var.set("✓ Batch complete" if success else "✗ Batch failed")
+            self.status_var.set("Batch complete" if success else "Batch failed")
         
         self.run_command(cmd, update_output)
     
@@ -799,18 +985,18 @@ class DialogueGeneratorGUI:
         }
         with open("config.json", "w") as f:
             json.dump(config, f, indent=2)
-        self.status_var.set("✓ Config saved")
-        messagebox.showinfo("Saved", "Config saved to config.json")
+        self.status_var.set("Config saved")
+        messagebox.showinfo("Saved", "Settings saved to config.json")
     
     def px_load_config(self):
         if os.path.exists("config.json"):
             with open("config.json", "r") as f:
                 config = json.load(f)
-            self.px_maxwidth_var.set(config.get("max_text_width", 1000))
-            self.px_padding_var.set(config.get("padding", 10))
-            self.px_fontsize_var.set(config.get("font_size", 20))
+            self.px_maxwidth_var.set(config.get("max_text_width", 800))
+            self.px_padding_var.set(config.get("padding", 15))
+            self.px_fontsize_var.set(config.get("font_size", 24))
             self.px_fps_var.set(config.get("fps", 30))
-            self.px_charspeed_var.set(config.get("char_speed", 1))
+            self.px_charspeed_var.set(config.get("char_speed", 2))
             self.px_dwell_var.set(config.get("video_duration_sec_after_text", 2))
             if "text_color" in config:
                 self.px_textcolor = config["text_color"]
@@ -819,10 +1005,10 @@ class DialogueGeneratorGUI:
                 self.px_bgcolor = config["bg_color"]
                 self.px_bgcolor_btn.config(bg="#{:02x}{:02x}{:02x}".format(*self.px_bgcolor[:3]))
             self.px_gif_var.set(config.get("export_gif", False))
-            self.px_autoopen_var.set(config.get("auto_open", False))
+            self.px_autoopen_var.set(config.get("auto_open", True))
             self.update_preview()
-            self.status_var.set("✓ Config loaded")
-            messagebox.showinfo("Loaded", "Config loaded from config.json")
+            self.status_var.set("Config loaded")
+            messagebox.showinfo("Loaded", "Settings loaded from config.json")
         else:
             messagebox.showwarning("Not Found", "config.json not found")
     
@@ -842,8 +1028,8 @@ class DialogueGeneratorGUI:
         }
         with open("gradient_config.json", "w") as f:
             json.dump(config, f, indent=2)
-        self.status_var.set("✓ Config saved")
-        messagebox.showinfo("Saved", "Config saved to gradient_config.json")
+        self.status_var.set("Config saved")
+        messagebox.showinfo("Saved", "Settings saved to gradient_config.json")
     
     def gr_load_config(self):
         if os.path.exists("gradient_config.json"):
@@ -853,9 +1039,9 @@ class DialogueGeneratorGUI:
                 self.gr_width_var.set(config["box_size"][0])
                 self.gr_height_var.set(config["box_size"][1])
             self.gr_padding_var.set(config.get("padding", 20))
-            self.gr_fontsize_var.set(config.get("font_size", 35))
+            self.gr_fontsize_var.set(config.get("font_size", 32))
             self.gr_fps_var.set(config.get("fps", 30))
-            self.gr_dwell_var.set(config.get("dwell_time", 3))
+            self.gr_dwell_var.set(config.get("dwell_time", 2))
             self.gr_direction_var.set(config.get("gradient_direction", "vertical"))
             if "top_color" in config:
                 self.gr_topcolor = config["top_color"]
@@ -867,10 +1053,10 @@ class DialogueGeneratorGUI:
                 self.gr_textcolor = config["text_color"]
                 self.gr_textcolor_btn.config(bg="#{:02x}{:02x}{:02x}".format(*self.gr_textcolor[:3]))
             self.gr_format_var.set(config.get("output_format", "webm"))
-            self.gr_autoopen_var.set(config.get("auto_open", False))
+            self.gr_autoopen_var.set(config.get("auto_open", True))
             self.update_preview()
-            self.status_var.set("✓ Config loaded")
-            messagebox.showinfo("Loaded", "Config loaded from gradient_config.json")
+            self.status_var.set("Config loaded")
+            messagebox.showinfo("Loaded", "Settings loaded from gradient_config.json")
         else:
             messagebox.showwarning("Not Found", "gradient_config.json not found")
 
