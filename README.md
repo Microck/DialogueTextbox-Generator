@@ -7,7 +7,7 @@ Generate Undertale/Deltarune-style dialogue videos with typing animation.
 **Use the Web Version for the best experience!**  
 The Python CLI/GUI tools are legacy and limited in features. The web version offers a modern interface, live preview, custom fonts, GIF/MP4 export, and much more.
 
-### [Run the Web Version](./web/README.md)
+### [Open Web Version](https://microck.github.io/DialogueTextbox-Generator/)
 
 ---
 
