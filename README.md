@@ -1,17 +1,30 @@
-# Dialogue Generator
+# Dialogue Textbox Generator
 
 Generate Undertale/Deltarune-style dialogue videos with typing animation.
 
+## 🌟 **Web Version (Recommended)**
+
+**Use the Web Version for the best experience!**  
+The Python CLI/GUI tools are legacy and limited in features. The web version offers a modern interface, live preview, custom fonts, GIF/MP4 export, and much more.
+
+### [Run the Web Version](./web/README.md)
+
+---
+
+## Legacy Python Tools
+
+> **Note:** These tools are considered deprecated. Please use the web version above.
+
 ![GUI](screenshots/gui.png)
 
-## Features
+### Features
 
 - Typing animation with punctuation pauses
 - Solid color, gradient, or image backgrounds
 - Export to MP4, WebM, or GIF
 - GUI, TUI, and CLI interfaces
 
-## Installation
+### Installation
 
 ```bash
 pip install -r requirements.txt
@@ -19,9 +32,9 @@ pip install -r requirements.txt
 
 Requires Python 3.8-3.12 (pygame doesn't support 3.14 yet).
 
-## Usage
+### Usage
 
-### GUI
+#### GUI
 
 ```bash
 python gui.py
@@ -29,7 +42,7 @@ python gui.py
 
 Type dialogue directly, choose background type, and generate.
 
-### TUI
+#### TUI
 
 ```bash
 python tui.py
@@ -37,7 +50,7 @@ python tui.py
 
 Interactive terminal interface with the same features.
 
-### CLI
+#### CLI
 
 ```bash
 # Solid background
@@ -45,36 +58,6 @@ python generate.py -i dialogue.txt -o output.mp4
 
 # Gradient background
 python gradient.py -i dialogue.txt --gradient vertical --format webm
-```
-
-## CLI Options
-
-### generate.py
-
-```
--i, --input       Input text file
--o, --output      Output video file
---font-size       Font size (default: 20)
---max-width       Max width (default: 1000)
---char-speed      Frames per char (default: 1)
---text-color      R,G,B
---bg-color        R,G,B
---gif-only        Export GIF only
---auto-open       Open when done
-```
-
-### gradient.py
-
-```
--i, --input       Input text file
---width           Box width
---height          Box height
---gradient        vertical, horizontal, or none
---top-color       R,G,B,A
---bottom-color    R,G,B,A
---bg-image        Background image
---format          mp4, webm, or gif
---auto-open       Open when done
 ```
 
 ## License
