@@ -4,13 +4,9 @@ Generate Undertale/Deltarune-style dialogue videos with typing animation.
 
 ## Screenshots
 
-| Solid Background | Gradient Background |
-|------------------|---------------------|
-| ![Solid](screenshots/gui_solid.png) | ![Gradient](screenshots/gui_gradient.png) |
-
-| Batch Processing | Pixel Perfect Mode |
-|------------------|---------------------|
-| ![Batch](screenshots/gui_batch.png) | ![Pixel Perfect](screenshots/gui_pixel_perfect.png) |
+| Solid Background | Gradient Background | Image Background |
+|------------------|---------------------|------------------|
+| ![Solid](screenshots/gui_solid.png) | ![Gradient](screenshots/gui_gradient.png) | ![Image](screenshots/gui_image.png) |
 
 ## Features
 
