@@ -2,7 +2,7 @@
 
 Generate Undertale/Deltarune-style dialogue videos with typing animation.
 
-![GUI](screenshots/gui_solid.png)
+![GUI](screenshots/gui.png)
 
 ## Features
 
