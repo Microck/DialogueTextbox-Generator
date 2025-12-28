@@ -9,6 +9,9 @@ The Python CLI/GUI tools are legacy and limited in features. The web version off
 
 ### [Run the Web Version](https://micr.dev/dialogue)
 
+<img width="1920" height="1080" alt="micr-dev-1920x1080desktop-b18983" src="https://github.com/user-attachments/assets/e1a35283-7f21-4c42-978c-bfcac15369a1" />
+
+
 ---
 
 ## Legacy Python Tools
